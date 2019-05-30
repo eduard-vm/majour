@@ -130,16 +130,23 @@ export default {
         autoplay: false,
         opacity: 0,
         scale: 0.8,
-        easing: 'easeInOutCirc',
-        // background: {
-        //   value: ['rgba(249, 249, 249, 0.5)', 'rgba(240, 220, 90, 0.5)'],
-        //   duration: 900,
-        // },
+        // easing: 'easeInOutCirc',
+        easing: 'spring(1, 80, 10, 0)',
+        background: {
+          easing: 'easeOutSine',
+          value: ['rgba(255, 255, 255, 1)', 'rgba(240, 220, 90, 0.5)'],
+          duration: 900,
+        },
         rotateZ() {
           return (-direction * 45) + 'deg';
         },
+
         rotateX() {
           return (direction * 45) + 'deg';
+        },
+
+        rotateY() {
+          return (85) + 'deg';
         },
         delay: anime.stagger(10),
       });
@@ -156,7 +163,8 @@ export default {
         this.touch.direction = direction;
         this.prepareTouchTween(direction);
       }
-      this.touch.moveTween.seek(this.touch.moveTween.duration * Math.abs(x / 2));
+      console.log(Math.abs(x));
+      this.touch.moveTween.seek(this.touch.moveTween.duration * Math.abs(x));
     },
 
     touchStart(event) {
@@ -165,20 +173,12 @@ export default {
       const centerX = scrW / 2;
       this.touch.direction = this.touch.startX > centerX ? 1 : -1;
       this.prepareTouchTween(this.touch.direction);
-      // console.log(this.touch.moveTween)
-      // const currX = parseCSSTransform($el.style.transform).translateX.value;
-      // const $el = this.$el.querySelector('.schedule__calendar-month');
-      // this.startTX = parseCSSTransform($el.style.transform).translateX.value;
-      // console.log(e.touches)
     },
 
     touchEnd(event) {
-      // this.touch.stopX = event.touches[0].clientX;
-      console.info('this.touch.moveTween ', this.touch.moveTween);
-      // if ()
+      console.info('@touch:end > moveTween: ', this.touch.moveTween);
       this.touch.moveTween.reverse();
       this.touch.moveTween.play();
-      // this.touch.moveTween = null;
     },
 
     setMonthName() {
@@ -264,6 +264,8 @@ export default {
     width: 100%
     display: block
     overflow: hidden
+  &__month-name
+    will-change: transform
   &__week
     width: 100%
     display: flex
@@ -279,7 +281,7 @@ export default {
     justify-content: center
     align-items: center
     font-size: 17px
-    will-change: transform
+    will-change: transform, opacity, background-color
     border-radius: 1px
     &:active
       opacity: 0.7
