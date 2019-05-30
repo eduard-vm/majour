@@ -279,6 +279,7 @@ export default {
     justify-content: center
     align-items: center
     font-size: 17px
+    will-change: transform
     border-radius: 1px
     &:active
       opacity: 0.7
