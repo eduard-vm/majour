@@ -52,10 +52,10 @@ export default {
       clone: null,
       touch: {
         startX: 0,
-        moveTweenLeave: null,
+        moveTween: null,
         stopX: 0,
         treshold: 100,
-        moveTweenLeaveEnter: null,
+        moveTweenEnter: null,
         direction: 1,
         currentX: 0,
       },
@@ -127,16 +127,33 @@ export default {
 
     prepareTouchTween(direction) {
       const vm = this;
-      let $items = [].slice.call(this.$el.querySelectorAll('.calendar__day'), 0).reverse();
+      if (!this.clone) {
+        const $container = this.$el.querySelector('.calendar__container');
+        const $month = this.$el.querySelector('.calendar__month');
+        const _clone = $month.cloneNode();
+        _clone.style.position = 'absolute';
+        _clone.classList.add('--clone');
+        $container.appendChild(_clone);
 
-      this.touch.moveTweenLeave = anime({
+        this.clone = _clone;
+      }
+      let $items = [].slice.call(this.$el.querySelectorAll('.calendar__day'), 0).reverse();
+      let $cloneItems = [].slice.call(this.$el.querySelectorAll('.calendar__day'), 0).reverse();
+
+      this.touch.moveTween = anime({
         targets: $items, 
         translateY: '90px',
         autoplay: false,
-        translateX: 30 * -direction + 'px',
-        scale: 0.5,
         opacity: 0,
+        scale: 0.9,
         easing: 'spring(1, 80, 10, 0)',
+        // rotateX() {
+        //   return -135 + 'deg';
+        // },
+
+        // rotateY() {
+        //   return direction * 45 + 'deg';
+        // },
         delay: anime.stagger(10),
       });
     },
@@ -146,7 +163,6 @@ export default {
       const scrW = this.$el.offsetWidth;
       const centerX = scrW / 2;
       const posX = event.touches[0].clientX;
-      this.touch.stopX = event.touches[0].clientX;
       let x = (this.touch.startX - posX);
       x = x / scrW;
       const direction = x > 0 ? 1 : -1;
@@ -156,7 +172,7 @@ export default {
       }
       x = Math.abs(x);
       console.log(Math.sin(x) / Math.PI * 2, x)
-      this.touch.moveTweenLeave.seek(this.touch.moveTweenLeave.duration * (Math.sin(x) / Math.PI));
+      this.touch.moveTween.seek(this.touch.moveTween.duration * (Math.sin(x) / Math.PI));
     },
 
     touchStart(event) {
@@ -168,20 +184,11 @@ export default {
     },
 
     touchEnd(event) {
-      // console.info('@touch:end > moveTweenLeave: ', this.touch.moveTweenLeave);
-      const delta = this.touch.stopX - this.touch.startX;
-      if (delta < -this.touch.treshold) {
-        this.nextMonth();
-      } else if (delta > this.touch.treshold) {
-        this.prevMonth();
-      } else {
-        this.touch.moveTweenLeave.reverse();
-        this.touch.moveTweenLeave.play();
-      }
+      console.info('@touch:end > moveTween: ', this.touch.moveTween);
       // const delta = currX - this.startTX;
-      // this.touch.moveTweenLeave.reverse();
-      // this.touch.moveTweenLeave.reverse();
-      // this.touch.moveTweenLeave.play();
+      // this.touch.moveTween.reverse();
+      // this.touch.moveTween.reverse();
+      // this.touch.moveTween.play();
     },
 
     setMonthName() {
@@ -263,22 +270,16 @@ export default {
 
 .calendar
   width: 100%
-  &__container
+  &__wrapper
     position: relative
     z-index: 0
     width: 100%
     display: block
     overflow: hidden
-    z-index: 5
   &__month
     width: 100%
     display: block
     overflow: hidden
-    &--clone
-      top: 0
-      left: 0
-      .calendar__day
-        background-color: rgba(blue, 0.2)
   &__month-name
     will-change: transform
   &__week
