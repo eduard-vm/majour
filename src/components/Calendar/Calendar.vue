@@ -18,7 +18,7 @@
     <div class="calendar__container">
       <div class="calendar__month" v-touch:moving="movingHandler" v-touch:start="touchStart" v-touch:end="touchEnd">
         <div class="calendar__week" v-for="(week, weekNum) of calendar" :key="weekNum">
-          <div class="calendar__day" v-for="(day, dayNum) of week" :key="dayNum">
+          <div class="calendar__day" :data-day="day.date.dayOfWeek" v-for="(day, dayNum) of week" :key="dayNum">
             {{ day.date.day }}
           </div>
         </div>
@@ -31,6 +31,7 @@
 import Calendar from '@/components/Calendar';
 import anime from 'animejs';
 import { close } from 'fs';
+import { sortBy } from 'lodash';
 
 const months = 'январь,февраль,март,апрель,май,июнь,июль,август,сентябрь,октябрь,ноябрь,декабрь'.split(',');
 
@@ -50,6 +51,7 @@ export default {
       timeline: null,
       monthDisplayed: null,
       calendar: [],
+      items: [],
       touch: {
         treshold: 200,
         // easing: 'ХйуЕгоЗнает(Пока что)',
@@ -92,19 +94,19 @@ export default {
       //   easing: 'linear',
       //   delay: anime.stagger(10),
       const timeline = anime.timeline({
-        duration: 120,
-        easing: 'linear',
-        delay: 30,
+        duration: 600,
+        easing: 'easeInOutBack',
         autoplay: false,
       });
 
-      const items = [].slice.call(this.$el.querySelectorAll('.calendar__day'), 0).reverse();
+      if (direction > 0) this.items.reverse();
+
       timeline.add({
-        targets: items,
+        targets: this.items,
         translateX: `${90 * -vm.touch.direction}px`,
         opacity: 0,
-        rotateY: '35deg',
-        delay: anime.stagger(10),
+        rotateY: '95deg',
+        delay: anime.stagger(5),
       });
       this.timeline = timeline;
     },
@@ -130,6 +132,18 @@ export default {
       this.touch.startX = event.touches[0].clientX;
       const scrW = this.$el.offsetWidth;
       const centerX = scrW / 2;
+      const items = [].slice.call(this.$el.querySelectorAll('.calendar__day'), 0).sort((n1, n2) => {
+        const d1 = +n1.dataset.day;
+        const d2 = +n2.dataset.day;
+        if (d1 < d2) {
+          return -1;
+        }
+        if (d1 > d2) {
+          return 1;
+        }
+        return 0;
+      });
+      this.items = items;
       this.touch.direction = this.touch.startX > centerX ? 1 : -1;
       this.updateTimeline(this.touch.direction);
     },
@@ -191,6 +205,7 @@ export default {
             week.push({
               id: dayNum,
               date: {
+                dayOfWeek: date.getDay(),
                 day: date.getDate(),
                 month: date.getMonth(),
                 format: this.formatDate(date),
@@ -241,6 +256,7 @@ export default {
     width: 100%
     display: block
     overflow: hidden
+    perspective: 500px
     &--clone
       top: 0
       left: 0
@@ -262,13 +278,14 @@ export default {
     // padding: 12px
     display: flex
     backface-visibility: hidden
+    background-color: #fff
     justify-content: center
     align-items: center
     font-size: 17px
     will-change: transform, opacity, background-color
     border-radius: 1px
     &:active
-      opacity: 0.7
+      opacity: 0.5
   &__control
     padding: 10px
     display: flex
