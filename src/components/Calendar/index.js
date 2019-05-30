@@ -1,3 +1,3 @@
-import Index from './Index';
+import Calendar from './Calendar';
 
-export default Index;
+export default Calendar;
