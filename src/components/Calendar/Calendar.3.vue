@@ -43,20 +43,21 @@ export default {
 
   data() {
     return {
-      // renderBefore: 1,
-      // renderAfter: 1,
       year: null,
+      renderBefore: 1,
+      renderAfter: 1,
       month: null,
-      timeline: null,
       monthDisplayed: null,
       calendar: [],
+      clone: null,
       touch: {
-        treshold: 200,
-        // easing: 'ХйуЕгоЗнает(Пока что)',
-        direction: 1,
         startX: 0,
-        currentX: 0,
+        moveTweenLeave: null,
         stopX: 0,
+        treshold: 200,
+        moveTweenLeaveEnter: null,
+        direction: 1,
+        currentX: 0,
       },
     };
   },
@@ -71,7 +72,57 @@ export default {
     year(year) {
       console.info('year ', year);
     },
-    // month(value, oldValue) {},
+    month(value, oldValue) {
+      const tl = anime.timeline({
+        easing: 'easeInOutCirc',
+        duration: 300
+      });
+      const self = this;
+
+      const $items = [].slice.call(this.$el.querySelectorAll('.calendar__day'), 0).reverse();
+      const $montName = this.$el.querySelector('.calendar__month-name');
+      let direction = 1;
+      if (value === 0 && oldValue === 11) {
+        direction = -1;
+      } else {
+        direction = value > oldValue ? -1 : 1;
+      }
+
+      tl.add({
+        targets: $items, 
+        translateY: '30px',
+        translateX: 30 * direction + 'px',
+        scale: 0.5,
+        opacity: 0,
+        delay: anime.stagger(9),
+        complete() {
+          self.buildCalendar();
+        },
+      })
+      tl.add({
+        targets: $items, 
+        translateY: '0',
+        translateX: '0',
+        scale: 1,
+        opacity: 1,
+        delay: anime.stagger(9) 
+      })
+      anime.timeline({
+        easing: 'easeInOutCirc',
+        duration: 600
+      }).add({
+        targets: $montName,
+        opacity: 0,
+        translateX: 30 * direction + 'px', 
+        complete() {
+          self.setMonthName();
+        },
+      }).add({
+        targets: $montName,
+        translateX: [30 * -direction + 'px', 0], 
+        opacity: 1,
+      })
+    },
   },
 
   methods: {
@@ -79,51 +130,39 @@ export default {
       return this.touch.direction;
     },
 
-    updateTimeline(direction) {
+    prepareTouchTween(direction) {
       const vm = this;
-      // let $items = [].slice.call(this.$el.querySelectorAll('.calendar__day'), 0).reverse();
-      //   targets: $items, 
-      //   translateY: '30px',
-      //   autoplay: false,
-      //   translateX: 90 * -direction + 'px',
-      //   // scale: 0.5,
-      //   // opacity: 0,
-      //   // easing: 'spring(1, 80, 10, 0)',
-      //   easing: 'linear',
-      //   delay: anime.stagger(10),
-      const timeline = anime.timeline({
-        duration: 120,
-        easing: 'linear',
-        delay: 30,
-        autoplay: false,
-      });
+      let $items = [].slice.call(this.$el.querySelectorAll('.calendar__day'), 0).reverse();
 
-      const items = [].slice.call(this.$el.querySelectorAll('.calendar__day'), 0).reverse();
-      timeline.add({
-        targets: items,
-        translateX: `${90 * -vm.touch.direction}px`,
-        opacity: 0,
-        rotateY: '35deg',
+      this.touch.moveTweenLeave = anime({
+        targets: $items, 
+        translateY: '30px',
+        autoplay: false,
+        duration: 300,
+        translateX: 90 * -direction + 'px',
+        // scale: 0.5,
+        // opacity: 0,
+        // easing: 'spring(1, 80, 10, 0)',
+        easing: 'linear',
         delay: anime.stagger(10),
       });
-      this.timeline = timeline;
     },
 
     movingHandler(event) {
       const self = this;
-      const w = this.$el.offsetWidth;
-      // const centerX = w / 2;
+      const scrW = this.$el.offsetWidth;
+      const centerX = scrW / 2;
       const posX = event.touches[0].clientX;
       this.touch.stopX = event.touches[0].clientX;
       let x = (this.touch.startX - posX);
-      x = x / w;
+      x = x / scrW;
       const direction = x > 0 ? 1 : -1;
       if (this.touch.direction !== direction) {
         this.touch.direction = direction;
-        this.updateTimeline(direction);
+        this.prepareTouchTween(direction);
       }
       x = Math.abs(x);
-      this.timeline.seek(this.timeline.duration * x);
+      this.touch.moveTweenLeave.seek(this.touch.moveTweenLeave.duration * x);
     },
 
     touchStart(event) {
@@ -131,12 +170,13 @@ export default {
       const scrW = this.$el.offsetWidth;
       const centerX = scrW / 2;
       this.touch.direction = this.touch.startX > centerX ? 1 : -1;
-      this.updateTimeline(this.touch.direction);
+      this.prepareTouchTween(this.touch.direction);
     },
 
     touchEnd(event) {
-      this.timeline.reverse();
-      this.timeline.play();
+      // console.info('@touch:end > moveTweenLeave: ', this.touch.moveTweenLeave);
+      this.touch.moveTweenLeave.reverse();
+      this.touch.moveTweenLeave.play();
       // const delta = this.touch.stopX - this.touch.startX;
       // if (delta < -this.touch.treshold) {
       //   this.nextMonth();
@@ -213,7 +253,6 @@ export default {
     const now = new Date();
     this.year = now.getFullYear(); 
     this.month = now.getMonth(); 
-    this.buildCalendar();
     this.setMonthName();
   },
 };
@@ -250,7 +289,6 @@ export default {
     will-change: transform
   &__week
     width: 100%
-    transform-origin: 50% 50%
     display: flex
   &__day
     box-sizing: border-box
@@ -284,12 +322,10 @@ export default {
     @extend .reset-button
     width: 40px
     height: 40px
+    // border: 1px solid #f0f0f0
     box-sizing: border-box
-    outline: none
-    transition: opacity 120ms linear
-    will-change: opacity
     &:active
-      opacity: 0.5
+      opacity: 0.7
     &--next,
     &--prev
       position: relative
@@ -302,8 +338,7 @@ export default {
         height: 12px
         transform-origin: center center
         transform: rotate(45deg)
-        background-color: transparent
-        border: 3px solid #333
+        border: 2px solid #333
     &--prev
       &:after
         border-top-width: 0
