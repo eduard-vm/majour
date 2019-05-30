@@ -131,10 +131,10 @@ export default {
         opacity: 0,
         scale: 0.8,
         easing: 'easeInOutCirc',
-        background: {
-          value: ['rgba(249, 249, 249, 0.5)', 'rgba(240, 220, 90, 0.5)'],
-          duration: 900,
-        },
+        // background: {
+        //   value: ['rgba(249, 249, 249, 0.5)', 'rgba(240, 220, 90, 0.5)'],
+        //   duration: 900,
+        // },
         rotateZ() {
           return (-direction * 45) + 'deg';
         },
