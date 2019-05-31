@@ -137,22 +137,15 @@ export default {
         },
       });
 
+      const daysNum = Array.from(Array(5)).map((_$, i) => i);
       const delay = function(n, i) {
-          if (i % 5 === 0) {
-            return 5;
-          }
-          if ((i - 1) % 5 === 0) {
-            return 15;
-          }
-          if ((i - 2) % 5 === 0) {
-            return 30;
-          }
-          if ((i - 3) % 5 === 0) {
-            return 45;
-          }
-          if ((i - 4) % 5 === 0) {
-            return 60;
-          }
+        let val = 5;
+        daysNum.some(_i => {
+          if ((i - _i) % daysNum.length === 0) {
+            val = ((_i * _i) + 30 * _i);
+          }  
+        });
+        return val
       };
 
       if (this.touch.direction > 0) this.items.reverse();
@@ -160,8 +153,6 @@ export default {
         targets: this.items,
         translateX: `${80 * this.touch.direction}px`,
         // translateY: `${80 * this.touch.direction}px`,
-        rotateX: 90 + 'deg',
-        scale: 0.8,
         opacity: {
           value: 0,
         },
@@ -172,8 +163,6 @@ export default {
         translateX: [`${80 * this.touch.direction}px`, 0],
         // translateY: [`${80 * this.touch.direction}px`, 0],
         // translateX: 0,
-        rotateX: [ 90 + 'deg', 0],
-        scale: [0.8, 1],
         opacity: [0, 1],
         // delay: anime.stagger(10),
         delay,
