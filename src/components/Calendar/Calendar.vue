@@ -15,31 +15,65 @@
         <button type="button" @click="nextMonth" class="calendar__control-btn calendar__control-btn--next" />
       </div>
     </div>
-    <div class="calendar__container" ref="calendarContainer">
-      <div class="calendar__month" ref="calendarMonth" v-touch:moving="movingHandler" v-touch:start="touchStart" v-touch:end="touchEnd">
-        <div class="calendar__week" ref="calendarWeek" v-for="(week, weekNum) of calendar" :key="weekNum">
-          <div class="calendar__day" @contextmenu.prevent :data-day="day.date.dayOfWeek" v-for="(day, dayNum) of week" :key="dayNum" ref="calendarDay">
-            {{ day.date.day }}
-          </div>
-        </div>
-      </div>
+    <div
+      class="calendar__container"
+      ref="calendarContainer"
+      v-touch:moving="movingHandler"
+      v-touch:start="touchStart"
+      v-touch:end="touchEnd"
+    >
+      <calendar-month :data="calendar" />
     </div>
   </div>
 </template>
 
 <script>
+import Vue from 'vue';
 import Calendar from '@/components/Calendar';
 import anime from 'animejs';
 import { close } from 'fs';
 import { sortBy } from 'lodash';
-
+import CalendarMonth from './CalendarMonth';
+const calendarMonth = Vue.extend(CalendarMonth);
 const months = 'январь,февраль,март,апрель,май,июнь,июль,август,сентябрь,октябрь,ноябрь,декабрь'.split(',');
+function buildCalendar(y, m, formatDate) {
+  const calendar = [];
+  const dateArgs = [y, m];
+  const now = new Date();
+  const dayMonthStarts = new Date(...dateArgs).getDay();
 
+  const currentDay = now.getDate();
+  const currentMonth = now.getMonth();
+
+  for (let i = 0; i < 6; i++) {
+    const week = [];
+    for (let k = 0; k < 7; k++) {
+      const dayNum = (k + 1) + (i * 7);
+      const date = new Date(...dateArgs, dayNum - (dayMonthStarts - 1));
+      const isWeakends = date.getDay() === 0 || date.getDay() === 6;
+      if (!isWeakends) {       
+        week.push({
+          id: dayNum,
+          date: {
+            dayOfWeek: date.getDay(),
+            day: date.getDate(),
+            month: date.getMonth(),
+            format: formatDate(date),
+          },
+          isToday: date.getDate() === currentDay && date.getMonth() === currentMonth,
+        });
+      }
+    }
+    calendar.push(week);
+  }
+  return calendar;
+}
 export default {
   name: 'calendar',
 
   components: {
     Calendar,
+    CalendarMonth,
   },
 
   data() {
@@ -69,34 +103,81 @@ export default {
     updateTimeline(direction) {
       const vm = this;
 
-      const timeline = anime.timeline({
-        duration: 160,
-        easing: 'cubicBezier(.5, .05, .1, .3)',
-        autoplay: false,
-      });
-
-      const clone = this.$refs.calendarMonth.cloneNode(true);
-      clone.classList.add('calendar__month--clone');
-      clone.classList.add(`calendar__month--${this.touch.direction > 0 ? 'rtl' : 'ltr'}`);
-      console.info('dir', this.touch.direction)
       const container = this.$refs.calendarContainer;
-      const cloneItems = clone.querySelectorAll('.calendar__day');
+      // const clone = container.querySelector('.calendar__month').cloneNode();
+      // const cloneItems = clone.querySelectorAll('.calendar__day');
+
+      // clone.classList.add('calendar__month--clone');
+      // clone.classList.add(`calendar__month--${this.touch.direction > 0 ? 'rtl' : 'ltr'}`);
+
       if (container.querySelector('.calendar__month--clone')) {
         container.removeChild(container.querySelector('.calendar__month--clone'));
       }
-      container.appendChild(clone);
+      const newMonth = new calendarMonth({
+        propsData: {
+          data: buildCalendar(this.year, this.month + 1, this.formatDate),
+        },
+      }).$mount();
+      newMonth.$el.classList.add('calendar__month--clone');
+      // newMonth.$el.classList.add(`calendar__month--${this.touch.direction > 0 ? 'rtl' : 'ltr'}`);
+      // clone.querySelectorAll('.calendar__day');
+
+      container.appendChild(newMonth.$el);
+      const cloneItems = newMonth.getDaysDOM();
+
+      const timeline = anime.timeline({
+        duration: 160,
+        // easing: 'cubicBezier(.5, .05, .1, .3)',
+        easing: 'linear',
+        autoplay: false,
+        complete() {
+          if (container.querySelector('.calendar__month--clone')) {
+            // container.removeChild(container.querySelector('.calendar__month--clone'));
+          }
+        },
+      });
+
+      const delay = function(n, i) {
+          if (i % 5 === 0) {
+            return 5;
+          }
+          if ((i - 1) % 5 === 0) {
+            return 15;
+          }
+          if ((i - 2) % 5 === 0) {
+            return 30;
+          }
+          if ((i - 3) % 5 === 0) {
+            return 45;
+          }
+          if ((i - 4) % 5 === 0) {
+            return 60;
+          }
+      };
+
+      if (this.touch.direction > 0) this.items.reverse();
       timeline.add({
         targets: this.items,
-        translateX: `${90 * this.touch.direction}px`,
-        opacity: 0,
-        delay: anime.stagger(10),
+        translateX: `${80 * this.touch.direction}px`,
+        // translateY: `${80 * this.touch.direction}px`,
+        rotateX: 90 + 'deg',
+        scale: 0.8,
+        opacity: {
+          value: 0,
+        },
+        delay
       });
       timeline.add({
         targets: cloneItems,
-        translateX: `${180 * this.touch.direction}px`,
+        translateX: [`${80 * this.touch.direction}px`, 0],
+        // translateY: [`${80 * this.touch.direction}px`, 0],
+        // translateX: 0,
+        rotateX: [ 90 + 'deg', 0],
+        scale: [0.8, 1],
         opacity: [0, 1],
-        delay: anime.stagger(10),
-      }, '-=360');
+        // delay: anime.stagger(10),
+        delay,
+      }, '-=160');
 
       this.timeline = timeline;
     },
@@ -109,7 +190,9 @@ export default {
       this.touch.stopX = event.touches[0].clientX;
       let x = (this.touch.startX - posX);
       x = x / w;
+      // const direction = x - (w / 2) > 0 ? -1 : 1;
       const direction = x > 0 ? -1 : 1;
+      // console.info((x - (w / 2)), direction)
       if (this.touch.direction !== direction) {
         this.touch.direction = direction;
         this.updateTimeline(direction);
@@ -119,7 +202,9 @@ export default {
     },
 
     touchStart(event) {
+      const prevX = this.touch.startX;
       this.touch.startX = event.touches[0].clientX;
+      console.log(prevX, this.touch.startX);
       // const centerX = this.$el.offsetWidth / 2;
       // const items = [].slice.call(this.$el.querySelectorAll('.calendar__day'), 0);
       // .sort((n1, n2) => {
@@ -134,7 +219,7 @@ export default {
       //   return 0;
       // });
       // this.items = items;
-      this.touch.direction = this.touch.startX > (this.$el.offsetWidth / 2) ? 1 : -1;
+      this.touch.direction = prevX > this.touch.startX ? -1 : 1;
       this.updateTimeline();
     },
 
@@ -185,35 +270,36 @@ export default {
     },
 
     buildCalendar() {
-      const calendar = [];
-      const dateArgs = [this.year, this.month];
-      const now = new Date();
-      const dayMonthStarts = new Date(...dateArgs).getDay();
+      // const calendar = [];
+      // const dateArgs = [this.year, this.month];
+      // const now = new Date();
+      // const dayMonthStarts = new Date(...dateArgs).getDay();
 
-      const currentDay = now.getDate();
-      const currentMonth = now.getMonth();
+      // const currentDay = now.getDate();
+      // const currentMonth = now.getMonth();
 
-      for (let i = 0; i < 6; i++) {
-        const week = [];
-        for (let k = 0; k < 7; k++) {
-          const dayNum = (k + 1) + (i * 7);
-          const date = new Date(...dateArgs, dayNum - (dayMonthStarts - 1));
-          const isWeakends = date.getDay() === 0 || date.getDay() === 6;
-          if (!isWeakends) {       
-            week.push({
-              id: dayNum,
-              date: {
-                dayOfWeek: date.getDay(),
-                day: date.getDate(),
-                month: date.getMonth(),
-                format: this.formatDate(date),
-              },
-              isToday: date.getDate() === currentDay && date.getMonth() === currentMonth,
-            });
-          }
-        }
-        calendar.push(week);
-      }
+      // for (let i = 0; i < 6; i++) {
+      //   const week = [];
+      //   for (let k = 0; k < 7; k++) {
+      //     const dayNum = (k + 1) + (i * 7);
+      //     const date = new Date(...dateArgs, dayNum - (dayMonthStarts - 1));
+      //     const isWeakends = date.getDay() === 0 || date.getDay() === 6;
+      //     if (!isWeakends) {       
+      //       week.push({
+      //         id: dayNum,
+      //         date: {
+      //           dayOfWeek: date.getDay(),
+      //           day: date.getDate(),
+      //           month: date.getMonth(),
+      //           format: this.formatDate(date),
+      //         },
+      //         isToday: date.getDate() === currentDay && date.getMonth() === currentMonth,
+      //       });
+      //     }
+      //   }
+      //   calendar.push(week);
+      // }
+      const calendar = buildCalendar(this.year, this.month, this.formatDate);
       this.calendar = calendar;
     },
 
@@ -229,7 +315,24 @@ export default {
     this.buildCalendar();
     this.setMonthName();
     this.$nextTick(() => {
-      this.items = this.$refs.calendarDay;
+      this.items = [].slice.call(this.$el.querySelectorAll('.calendar__day'), 0);
+      // this.items.forEach((n, i) => {
+      //   if (i % 5 === 0) {
+      //     n.style.backgroundColor = 'orange';
+      //   }
+      //   if ((i - 1) % 5 === 0) {
+      //     n.style.backgroundColor = 'yellow';
+      //   }
+      //   if ((i - 2) % 5 === 0) {
+      //     n.style.backgroundColor = 'green';
+      //   }
+      //   if ((i - 3) % 5 === 0) {
+      //     n.style.backgroundColor = 'blue';
+      //   }
+      //   if ((i - 4) % 5 === 0) {
+      //     n.style.backgroundColor = 'blue';
+      //   }
+      // });
     });
   },
 };
@@ -254,49 +357,8 @@ export default {
     overflow: hidden
     z-index: 5
     display: flex
-  &__month
-    width: 100%
-    display: block
-    perspective: 500px
-    flex-shrink: 0
-    &--clone
-    &--clone
-      position: absolute
-      top: 0
-      .calendar__day
-    &--ltr
-      right: -100%
-      .calendar__day 
-        background-color: rgba(orange, 0.2)
-    &--rtl
-      left: -100% 
-      .calendar__day
-        background-color: rgba(green, 0.2)
   &__month-name
     will-change: transform
-  &__week
-    width: 100%
-    transform-origin: 50% 50%
-    display: flex
-  &__day
-    box-sizing: border-box
-    width: 20%
-    margin: 1px
-    min-height: 60px
-    border: 1px solid #dbe4e1
-    color: #455843
-    // padding: 12px
-    display: flex
-    user-select: none
-    backface-visibility: hidden
-    background-color: #fff
-    justify-content: center
-    align-items: center
-    font-size: 17px
-    will-change: transform, opacity, background-color
-    border-radius: 1px
-    &:active
-      opacity: 0.5
   &__control
     padding: 10px
     display: flex
