@@ -15,10 +15,10 @@
         <button type="button" @click="nextMonth" class="calendar__control-btn calendar__control-btn--next" />
       </div>
     </div>
-    <div class="calendar__container" ref="calendarContainer">
-      <div class="calendar__month" ref="calendarMonth" v-touch:moving="movingHandler" v-touch:start="touchStart" v-touch:end="touchEnd">
-        <div class="calendar__week" ref="calendarWeek" v-for="(week, weekNum) of calendar" :key="weekNum">
-          <div class="calendar__day" @contextmenu.prevent :data-day="day.date.dayOfWeek" v-for="(day, dayNum) of week" :key="dayNum" ref="calendarDay">
+    <div class="calendar__container">
+      <div class="calendar__month" v-touch:moving="movingHandler" v-touch:start="touchStart" v-touch:end="touchEnd">
+        <div class="calendar__week" v-for="(week, weekNum) of calendar" :key="weekNum">
+          <div class="calendar__day" :data-day="day.date.dayOfWeek" v-for="(day, dayNum) of week" :key="dayNum">
             {{ day.date.day }}
           </div>
         </div>
@@ -71,33 +71,27 @@ export default {
 
       const timeline = anime.timeline({
         duration: 160,
-        easing: 'cubicBezier(.5, .05, .1, .3)',
+        easing: 'linear',
         autoplay: false,
       });
+      this.items = [].slice.call(this.$el.querySelectorAll('.calendar__day'), 0);
 
-      const clone = this.$refs.calendarMonth.cloneNode(true);
-      clone.classList.add('calendar__month--clone');
-      clone.classList.add(`calendar__month--${this.touch.direction > 0 ? 'rtl' : 'ltr'}`);
-      console.info('dir', this.touch.direction)
-      const container = this.$refs.calendarContainer;
-      const cloneItems = clone.querySelectorAll('.calendar__day');
-      if (container.querySelector('.calendar__month--clone')) {
-        container.removeChild(container.querySelector('.calendar__month--clone'));
-      }
-      container.appendChild(clone);
+      // if (direction < 0) this.items.reverse();
       timeline.add({
         targets: this.items,
-        translateX: `${90 * this.touch.direction}px`,
+        translateX: `${90 * -this.touch.direction}px`,
         opacity: 0,
         delay: anime.stagger(10),
+        // delay(node, idx, count) {
+        //   if (idx % 5 === 0) {
+        //     return 15;
+        //   }
+        //   return 50;
+        // },
+        // complete() {
+        //   console.info('on done')
+        // }
       });
-      timeline.add({
-        targets: cloneItems,
-        translateX: `${180 * this.touch.direction}px`,
-        opacity: [0, 1],
-        delay: anime.stagger(10),
-      }, '-=360');
-
       this.timeline = timeline;
     },
 
@@ -109,7 +103,7 @@ export default {
       this.touch.stopX = event.touches[0].clientX;
       let x = (this.touch.startX - posX);
       x = x / w;
-      const direction = x > 0 ? -1 : 1;
+      const direction = x > 0 ? 1 : -1;
       if (this.touch.direction !== direction) {
         this.touch.direction = direction;
         this.updateTimeline(direction);
@@ -139,23 +133,20 @@ export default {
     },
 
     touchEnd(event) {
-      const delta = this.touch.stopX - this.touch.startX;
+      // const delta = this.touch.stopX - this.touch.startX;
       this.timeline.reverse();
       this.timeline.play();
+      this.timeline.complete = function() {
+        console.log('on done');
+      }
       // if (delta < -this.touch.treshold) {
-      //   this.timeline.complete = function() {
-      //     console.log('on done to prev slide');
-      //   }
-      //   // this.timeline.play();
+      //   this.timeline.play();
       // } else if (delta > this.touch.treshold) {
-      //   this.timeline.complete = function() {
-      //     console.log('on done to next slide');
-      //   }
-      //   // this.timeline.play();
+      //   this.timeline.play();
       // } else {
       //   this.timeline.reverse();
+      //   this.timeline.play();
       // }
-      // this.timeline.play();
       // const delta = currX - this.startTX;
       // this.touch.moveTweenLeave.reverse();
       // this.touch.moveTweenLeave.reverse();
@@ -229,7 +220,7 @@ export default {
     this.buildCalendar();
     this.setMonthName();
     this.$nextTick(() => {
-      this.items = this.$refs.calendarDay;
+      // this.items = [].slice.call(this.$el.querySelectorAll('.calendar__day'), 0);
     });
   },
 };
@@ -253,25 +244,16 @@ export default {
     display: block
     overflow: hidden
     z-index: 5
-    display: flex
   &__month
     width: 100%
     display: block
+    overflow: hidden
     perspective: 500px
-    flex-shrink: 0
     &--clone
-    &--clone
-      position: absolute
       top: 0
+      left: 0
       .calendar__day
-    &--ltr
-      right: -100%
-      .calendar__day 
-        background-color: rgba(orange, 0.2)
-    &--rtl
-      left: -100% 
-      .calendar__day
-        background-color: rgba(green, 0.2)
+        background-color: rgba(blue, 0.2)
   &__month-name
     will-change: transform
   &__week
@@ -287,7 +269,6 @@ export default {
     color: #455843
     // padding: 12px
     display: flex
-    user-select: none
     backface-visibility: hidden
     background-color: #fff
     justify-content: center
