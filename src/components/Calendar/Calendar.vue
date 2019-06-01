@@ -16,9 +16,7 @@
       </div>
     </div>
     <div 
-      v-touch:moving="movingHandler"
-      v-touch:start="touchStart"
-      v-touch:end="touchEnd"
+
       class="calendar__container"
     >
       <div class="calendar__header">
@@ -27,9 +25,18 @@
         </div>
       </div>
       <div class="calendar__month">
-        <div class="calendar__day" @click="selectDate(day, dayN, $event)" v-for="(day, dayN) of calendar" :key="dayN">
+        <div class="calendar__day"
+          @contextmenu.prevent
+          v-touch:start="cellTouchStart"
+          v-touch:end="cellTouchEnd"
+          @click="selectDate(day, dayN, $event)"
+          v-for="(day, dayN) of calendar"
+          :key="dayN">
           <div class="cell">
-            {{ day.id }}
+            <div class="cell__background" />
+            <div class="cell__body">
+              {{ day.id }}
+            </div>
           </div>
         </div>
       </div>
@@ -93,6 +100,13 @@ export default {
   },
 
   methods: {
+    cellTouchStart(e) {
+      const sibling = e.target
+      console.info(sibling)
+    },
+    cellTouchEnd(cellTouchStart, cellTouchEnd) {
+
+    },
     animate(value, oldValue) {
       const ctx = this;
       const monthNameNode = this.$el.querySelectorAll('.calendar__month-name');
@@ -159,34 +173,34 @@ export default {
     },
 
     selectDate(month, day, monthIdx, dayIdx, event) {
-      console.info('month, day, monthIdx, dayIdx, event', month, day, monthIdx, dayIdx, event);
-      const $month = this.$el.querySelectorAll('.calendar__month')[monthIdx];
-      const $day = $month.querySelectorAll('.calendar__day')[dayIdx];
+      // console.info('month, day, monthIdx, dayIdx, event', month, day, monthIdx, dayIdx, event);
+      // const $month = this.$el.querySelectorAll('.calendar__month')[monthIdx];
+      // const $day = $month.querySelectorAll('.calendar__day')[dayIdx];
 
-      const w = this.$el.offsetWidth;
-      const h = this.$el.offsetHeight;
-      // console.log($pane);
-      const $_clone = $day.cloneNode(true);
-      // $_clone.style.position = 'absolute';
-      // $_clone.style.backgroundColor = 'red';
-      const dw = $day.offsetWidth
-      const dh = $day.offsetHeight
-      // $_clone.
-      const {x, y} = event;
-      $_clone.style.position = 'abolute';
-      $_clone.style.left = x + 'px';
-      $_clone.style.top = y + 'px';
-      $_clone.style.width = dw + 'px';
-      $_clone.style.height = dh + 'px';
-      this.$el.appendChild($_clone);
-      // console.log(x, y);/
-      console.log(w / dw, h / dh)
-      // anime({
-      //   targets: $day,
-      //   scaleX: w / dw,
-      //   scaleY: h / dh,
-      // })
-      console.log($day);
+      // const w = this.$el.offsetWidth;
+      // const h = this.$el.offsetHeight;
+      // // console.log($pane);
+      // const $_clone = $day.cloneNode(true);
+      // // $_clone.style.position = 'absolute';
+      // // $_clone.style.backgroundColor = 'red';
+      // const dw = $day.offsetWidth
+      // const dh = $day.offsetHeight
+      // // $_clone.
+      // const {x, y} = event;
+      // $_clone.style.position = 'abolute';
+      // $_clone.style.left = x + 'px';
+      // $_clone.style.top = y + 'px';
+      // $_clone.style.width = dw + 'px';
+      // $_clone.style.height = dh + 'px';
+      // this.$el.appendChild($_clone);
+      // // console.log(x, y);/
+      // console.log(w / dw, h / dh)
+      // // anime({
+      // //   targets: $day,
+      // //   scaleX: w / dw,
+      // //   scaleY: h / dh,
+      // // })
+      // console.log($day);
     },
 
     createDate(m, d) {
@@ -353,7 +367,41 @@ export default {
 //   justify-content: center
 //   align-items: center
 //   background-color: #fff
-
+.cell
+  position: relative
+  width: 100%
+  height: 100%
+  user-select: none
+  &__background
+    position: absolute
+    top: 0
+    left: 0
+    width: 100%
+    height: 100%
+    background-color: yellow
+    opacity: 0
+    z-index: 0
+    will-change: opacity
+    transition: opacity 240ms linear
+  &__body
+    z-index: 1
+    position: absolute
+    top: 0
+    left: 0
+    width: 100%
+    height: 100%
+    display: flex
+    color: #666
+    opacity: 0.6
+    justify-content: center
+    align-items: center
+    will-change: opacity
+    transition: opacity 240ms linear
+  &:active
+    .cell__body
+      opacity: 1
+    .cell__background
+      opacity: 1
 .calendar
   position: relative
   width: 100%
@@ -380,20 +428,22 @@ export default {
     // box-shadow: inset 2px 2px 0 1px rgba(#000, 0.068)
     transform-origin: 50% 50%
     box-sizing: border-box
-    display: flex
-    justify-content: center
-    align-items: center
     font-size: 13px
     min-height: 60px
     color: #adadad
     border-radius: 1px
+    position: relative
     will-change: transform
+    display: flex
+    justify-content: center
+    align-items: center
     &--header
       text-transform: uppercase
       border-bottom-color: #e0e0e0
       // border-bottom-width: 2px
       border-bottom-style: solid
       color: #333
+
   &__container
     position: relative
     z-index: 0
