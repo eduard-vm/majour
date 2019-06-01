@@ -32,12 +32,12 @@
           @click="selectDate(day, dayN, $event)"
           v-for="(day, dayN) of calendar"
           :key="dayN">
-          <div class="cell">
+          {{ day.id }}
+          <!-- <div class="cell">
             <div class="cell__background" />
             <div class="cell__body">
-              {{ day.id }}
             </div>
-          </div>
+          </div> -->
         </div>
       </div>
     </div>
@@ -372,36 +372,39 @@ export default {
   width: 100%
   height: 100%
   user-select: none
-  &__background
-    position: absolute
-    top: 0
-    left: 0
-    width: 100%
-    height: 100%
-    background-color: yellow
-    opacity: 0
-    z-index: 0
-    will-change: opacity
-    transition: opacity 240ms linear
-  &__body
-    z-index: 1
-    position: absolute
-    top: 0
-    left: 0
-    width: 100%
-    height: 100%
-    display: flex
-    color: #666
-    opacity: 0.6
-    justify-content: center
-    align-items: center
-    will-change: opacity
-    transition: opacity 240ms linear
+  transition: opacity 240ms linear
+
+  // &__background
+  //   position: absolute
+  //   top: 0
+  //   left: 0
+  //   width: 100%
+  //   height: 100%
+  //   background-color: yellow
+  //   opacity: 0
+  //   z-index: 0
+  //   will-change: opacity
+  //   transition: opacity 240ms linear
+  // &__body
+  //   z-index: 1
+  //   position: absolute
+  //   top: 0
+  //   left: 0
+  //   width: 100%
+  //   height: 100%
+  //   display: flex
+  //   color: #666
+  //   opacity: 0.6
+  //   justify-content: center
+  //   align-items: center
+  //   will-change: opacity
+  //   transition: opacity 240ms linear
   &:active
-    .cell__body
-      opacity: 1
-    .cell__background
-      opacity: 1
+    background-color: yellow
+    // .cell__body
+    //   opacity: 1
+    // .cell__background
+    //   opacity: 1
 .calendar
   position: relative
   width: 100%
