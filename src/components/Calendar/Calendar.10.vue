@@ -21,15 +21,10 @@
       v-touch:end="touchEnd"
       class="calendar__container"
     >
-      <div class="calendar__header">
-        <div class="calendar__day calendar__day--header" v-for="(day, dayN) of 'пн,вт,ср,чт,пт'.split(',')" :key="dayN">
-          {{ day }}
-        </div>
-      </div>
-      <div class="calendar__month">
-        <div class="calendar__day" @click="selectDate(day, dayN, $event)" v-for="(day, dayN) of calendar" :key="dayN">
-          <div class="cell">
-            {{ day.id }}
+      <div class="transform-pane">
+        <div class="calendar__month" v-for="(m, i) of calendar" :key="i">
+          <div class="calendar__day" @click="selectDate(m, d, i, di, $event)" v-for="(d, di) of m" :key="di">
+            {{ d.id }}
           </div>
         </div>
       </div>
@@ -57,6 +52,71 @@ import CalendarMonth from './CalendarMonth';
 const calendarMonth = Vue.extend(CalendarMonth);
 const months = 'январь,февраль,март,апрель,май,июнь,июль,август,сентябрь,октябрь,ноябрь,декабрь'.split(',');
 
+function generateCalendar(year, month, ctx) {
+  const calendar = [];
+  const now = new Date(year, month);
+  [
+    new Date(now.getFullYear(), now.getMonth() -1),
+    new Date(now.getFullYear(), now.getMonth()),
+    new Date(now.getFullYear(), now.getMonth() +1),
+  ].forEach((date, index) => {
+    calendar.push(generateMonth(date, (d) => {
+      return ctx.createDate(date, d);
+    }));
+  });
+
+  return calendar;
+}
+
+function generateMonth(sd, ccb) {
+  const dargs = [sd.getFullYear(), sd.getMonth()];
+  const s = new Date(...dargs).getDay();
+
+  const m = [];
+  for (let i = 0; i < 6; i++) {
+    for (let j = 0; j < 7; j++) {
+      const d  = new Date(...dargs, ((j + 1) + (i * 7)) - (s - 1));
+      const D = d.getDay();
+      if (!(D === 0 || D === 6)) {
+        m.push(ccb(d));
+      }
+    }
+  }
+  return m;
+}
+
+function buildCalendar(y, m, formatDate) {
+  const calendar = [];
+  const dateArgs = [y, m];
+  const now = new Date();
+  const dayMonthStarts = new Date(...dateArgs).getDay();
+
+  const currentDay = now.getDate();
+  const currentMonth = now.getMonth();
+
+  for (let i = 0; i < 6; i++) {
+    const week = [];
+    for (let k = 0; k < 7; k++) {
+      const dayNum = (k + 1) + (i * 7);
+      const date = new Date(...dateArgs, dayNum - (dayMonthStarts - 1));
+      const isWeakends = date.getDay() === 0 || date.getDay() === 6;
+      if (!isWeakends) {       
+        week.push({
+          id: dayNum,
+          date: {
+            dayOfWeek: date.getDay(),
+            day: date.getDate(),
+            month: date.getMonth(),
+            format: formatDate(date),
+          },
+          isToday: date.getDate() === currentDay && date.getMonth() === currentMonth,
+        });
+      }
+    }
+    calendar.push(week);
+  }
+  return calendar;
+}
 export default {
   name: 'calendar',
 
@@ -89,88 +149,26 @@ export default {
   },
 
   watch: {
-    month: 'animate',
+    month(month) {
+      this.monthDisplayed = months[this.month];
+      console.log('on change month', month);
+    },
+
+    transformIndex(index) {
+      const vm = this;
+      vm.calendar = generateCalendar(vm.year, vm.month, vm);
+      anime({
+        targets: this.$pane,
+        translateX: -this.transformIndex * 100 + '%',
+        complete() {
+        }
+      });
+
+      this.monthDisplayed = months[this.month];
+    },
   },
 
   methods: {
-    animate(value, oldValue) {
-      const ctx = this;
-      const monthNameNode = this.$el.querySelectorAll('.calendar__month-name');
-      const nodes = this.$el.querySelectorAll('.calendar__month .calendar__day');
-      const timeline = anime.timeline({
-        duration: 300,
-        easing: 'easeOutCirc',
-      });
-      const dir = value > oldValue ? -1 : 1;
-      console.log(dir, value, oldValue)
-      // const daysNum = Array.from(Array(5)).map((_$, i) => i);
-      // const delay = function(n, i) {
-      //   let val = 25;
-      //   daysNum.some(_i => {
-      //     if ((i - _i) % daysNum.length === 0) {
-      //       val = ((_i * _i) + 150 * _i);
-      //     }  
-      //   });
-      //   return val
-      // };
-      anime({
-        targets: monthNameNode,
-        translateX: `${dir * 50}%`,
-        easing: 'easeOutCirc',
-        opacity: 0,
-      });
-      const delay = anime.stagger(15);
-      timeline.add({
-        targets: nodes,
-        translateX: `${dir * 100}%`,
-        opacity: 0,
-        delay,
-        complete() {
-          ctx.updateMonth();
-
-          anime({
-            targets: monthNameNode,
-            translateX: [`${-dir * 50}%`, 0],
-            opacity: [0, 1],
-          });
-        },
-      });
-      // const monthNameNodeAnime = anime({
-        //   targets: monthNameNode,
-      //   duration: 600,
-      //   opacity: 0,
-      // });
-      timeline.add({
-        targets: nodes,
-        translateX: [`${-dir * 100}%`, 0],
-        opacity: [0, 1],
-        delay,
-      });
-    },
-    updateMonth() {
-      this.calendar = this.createMonth(this.year, this.month);
-      this.setMonthName();
-    },
-    createMonth(year, month) {
-      const dateArgs = [year, month];
-      const monthStartsDay = new Date(...dateArgs).getDay();
-
-      const days = [];
-
-      for (let weekN = 0; weekN < 6; weekN++) {
-        for (let dayN = 0; dayN < 7; dayN++) {
-          const dayDate  = new Date(...dateArgs, ((dayN + 1) + (weekN * 7)) - (monthStartsDay - 1));
-          const dayOfWeek = dayDate.getDay();
-          if (!(dayOfWeek === 0 || dayOfWeek === 6)) {
-            days.push({
-              id: dayDate.getDate(),
-            });
-          }
-        }
-      }
-      return days;
-    },
-
     selectDate(month, day, monthIdx, dayIdx, event) {
       console.info('month, day, monthIdx, dayIdx, event', month, day, monthIdx, dayIdx, event);
       const $month = this.$el.querySelectorAll('.calendar__month')[monthIdx];
@@ -310,9 +308,11 @@ export default {
       } else {
         this.month = (this.month - 1);
       }
+      this.transformIndex = this.transformIndex > 0 ? this.transformIndex - 1 : 0;
     },
 
     nextMonth() {
+      this.transformIndex = this.transformIndex === 2 ? 2 : this.transformIndex + 1;
       if (this.month + 1 > 11) {
         this.year = (this.year + 1);
         this.month = 0;
@@ -321,24 +321,34 @@ export default {
       }
     },
 
+    buildCalendar() {
+      const calendar = buildCalendar(this.year, this.month, this.formatDate);
+      this.calendar = calendar;
+    },
+
     formatDate(date) {
       return date.getDate();
     },
+
+    iniCalenda() {
+      anime.set(this.$el.querySelector('.transform-pane'), {
+        translateX: '-100%',
+      });
+    }
   },
 
   mounted() {
+    this.$pane = this.$el.querySelector('.transform-pane');
+    anime.set(this.pane, {
+      translateX: '-100%',
+    });
     const now = new Date();
     this.month = now.getMonth();
     this.year = now.getFullYear();
-    // this.calendar = this.createMonth(this.year, this.month)
-    // this.$pane = this.$el.querySelector('.transform-pane');
-    // anime.set(this.pane, {
-    //   translateX: '-100%',
-    // });
-    // this.calendar = generateCalendar(this.year, this.month, this);
-    // this.monthDisplayed = months[this.month];
-    // this.iniCalenda();
-    // // console.info(this.calendar);
+    this.calendar = generateCalendar(this.year, this.month, this);
+    this.monthDisplayed = months[this.month];
+    this.iniCalenda();
+    // console.info(this.calendar);
   },
 };
 </script>
@@ -357,53 +367,31 @@ export default {
   // transform: translateX(-50%)
   display: flex
   will-change: transform
-// .cell
-//   width: 30px
-//   height: 30px
-//   border-radius: 50%
-//   box-shadow: 0 0 2px 2px rgba(#000, 0.068)
-//   display: flex
-//   justify-content: center
-//   align-items: center
-//   background-color: #fff
-
 .calendar
   position: relative
   width: 100%
-  &__header
-    width: 100%
-    display: flex
-    flex-wrap: wrap
-    flex-shrink: 0
-    persperctive: 500px
-    transform-origin: 50% 0
-    box-sizing: border-box
   &__month
     width: 100%
     display: flex
     flex-wrap: wrap
     flex-shrink: 0
-    persperctive: 500px
-    transform-origin: 50% 0
     box-sizing: border-box
   &__day
     flex-shrink: 0
-    min-width: 20%
-    border-bottom: 1px dotted #f0f0f0
-    // box-shadow: inset 2px 2px 0 1px rgba(#000, 0.068)
+    min-width: calc(20% - 4px)
+    box-shadow: 0 0 0 1px rgba(#000, 0.068)
     transform-origin: 50% 50%
     box-sizing: border-box
     display: flex
+    background-color: #fff
     justify-content: center
     align-items: center
     font-size: 11px
     min-height: 60px
+    margin: 2px
     color: #adadad
     border-radius: 1px
     will-change: transform
-    &--header
-      text-transform: uppercase
-      color: #333
   &__container
     position: relative
     z-index: 0

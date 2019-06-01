@@ -1,6 +1,9 @@
 <template>
   <div class="page">
-    <calendar />
+    <router-link :to="{ name: 'Students' }">Добавить ученика</router-link>
+    <router-link :to="{ name: 'Calendar' }">Календарь</router-link>
+    <!-- <button type="button" @click="$router.push({ name: 'Students' })">Ученики</button> -->
+    <!-- <calendar /> -->
     <!-- <div v-for="(student, idx) of students" class="item" :key="idx">
       {{ student.name }}
     </div> -->
@@ -8,35 +11,28 @@
 </template>
 
 <script>
-import Calendar from '@/components/Calendar';
+// import Calendar from '@/components/Calendar';
+import { mapGetters, mapActions } from 'vuex';
+
 export default {
   name: 'home-page',
 
   components: {
-    Calendar,
+    // Calendar,
   },
 
   data() {
-    return {
-      students: [
-        {
-          name: 'Student 1',
-          id: 1,
-        },
-        {
-          name: 'Student 2',
-          id: 2,
-        },
-        {
-          name: 'Student 2',
-          id: 3,
-        },
-      ],
-    }
+    return {};
+  },
+
+  computed: {
+    ...mapGetters({}),
+  },
+
+  methods: {
+    ...mapActions({}),
   },
 };
 </script>
 
-<style lang="sass" scoped>
-
-</style>
+<style lang="sass" scoped></style>
