@@ -98,27 +98,18 @@ export default {
       const monthNameNode = this.$el.querySelectorAll('.calendar__month-name');
       const nodes = this.$el.querySelectorAll('.calendar__month .calendar__day');
       const timeline = anime.timeline({
-        duration: 300,
-        easing: 'easeOutCirc',
+        duration: 120,
+        easing: 'linear',
       });
-      const dir = value > oldValue ? -1 : 1;
-      console.log(dir, value, oldValue)
-      // const daysNum = Array.from(Array(5)).map((_$, i) => i);
-      // const delay = function(n, i) {
-      //   let val = 25;
-      //   daysNum.some(_i => {
-      //     if ((i - _i) % daysNum.length === 0) {
-      //       val = ((_i * _i) + 150 * _i);
-      //     }  
-      //   });
-      //   return val
-      // };
+      const dir = (value === 0 && oldValue === 11) ? -1 : (value > oldValue ? -1 : 1);
+
       anime({
         targets: monthNameNode,
         translateX: `${dir * 50}%`,
         easing: 'easeOutCirc',
         opacity: 0,
       });
+
       const delay = anime.stagger(15);
       timeline.add({
         targets: nodes,
@@ -135,11 +126,7 @@ export default {
           });
         },
       });
-      // const monthNameNodeAnime = anime({
-        //   targets: monthNameNode,
-      //   duration: 600,
-      //   opacity: 0,
-      // });
+
       timeline.add({
         targets: nodes,
         translateX: [`${-dir * 100}%`, 0],
@@ -396,13 +383,16 @@ export default {
     display: flex
     justify-content: center
     align-items: center
-    font-size: 11px
+    font-size: 13px
     min-height: 60px
     color: #adadad
     border-radius: 1px
     will-change: transform
     &--header
       text-transform: uppercase
+      border-bottom-color: #e0e0e0
+      // border-bottom-width: 2px
+      border-bottom-style: solid
       color: #333
   &__container
     position: relative
@@ -413,7 +403,7 @@ export default {
   &__month-name
     will-change: transform
   &__control
-    padding: 10px
+    padding: 10px 20px
     display: flex
     justify-content: space-between
     width: 100%
