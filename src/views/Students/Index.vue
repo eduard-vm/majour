@@ -7,9 +7,9 @@
         </div>
       </div>
     </div>
-    <div class="content__empyt" v-else>
+    <!-- <div class="content__empyt" v-else>
       <p>Ай-яй, нет ни одного ученика...</p>
-    </div>
+    </div> -->
     <router-link :to="{ name: 'AddNewStudent' }">Добавить ученика</router-link>
     <!-- <button type="button" @click="$router.push({ name: 'AddNewStudent' })">Добавить ученика</button> -->
     <!-- <button type="button" @click="$router.push({ name: 'AddNewStudent' })">Добавить ученика</button> -->

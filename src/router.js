@@ -2,7 +2,7 @@ import Vue from 'vue';
 import Router from 'vue-router';
 import Home from '@/views/Home.vue';
 import StudetsLayout from '@/layouts/StudetsLayout';
-import AddStudentForm from '@/views/Students/AddStudentForm';
+import NewStudentForm from '@/views/Students/NewStudentForm';
 import StudentsIndex from '@/views/Students/Index';
 import Calendar from '@/views/Calendar/Index';
 
@@ -24,15 +24,15 @@ export default new Router({
       component: Calendar,
     },
     {
+      path: '/add',
+      name: 'AddNewStudent',
+      component: NewStudentForm,
+    },
+    {
       path: '/students',
       // component: () => import('./layouts/StudetsLayout.vue'),
       component: StudetsLayout,
       children: [
-        {
-          path: 'add',
-          name: 'AddNewStudent',
-          component: AddStudentForm,
-        },
         {
           path: '/',
           name: 'StudentsMain',

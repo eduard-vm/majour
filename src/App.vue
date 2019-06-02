@@ -74,11 +74,11 @@ export default {
   top: 56px
   // background-color: rgba(green, 0.1)
   overflow: hidden
+  overflow-y: auto
   width: 100%
   .page
     width: 100%
     box-sizing: border-box
-
 .fade-enter-active, .fade-leave-active
   transition: opacity .5s ease
 
@@ -88,7 +88,8 @@ export default {
 .child-view
   position: absolute
   transition: all .5s cubic-bezier(.55,0,.1,1)
-
+  width: 100%
+  height: 100%
 .slide-left-enter, .slide-right-leave-active
   opacity: 0
   -webkit-transform: translate(30px, 0)
