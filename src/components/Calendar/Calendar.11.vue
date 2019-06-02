@@ -105,13 +105,14 @@ export default {
       console.info(sibling)
     },
     cellTouchEnd(cellTouchStart, cellTouchEnd) {
+
     },
     animate(value, oldValue) {
       const ctx = this;
       const monthNameNode = this.$el.querySelectorAll('.calendar__month-name');
       const nodes = this.$el.querySelectorAll('.calendar__month .calendar__day');
       const timeline = anime.timeline({
-        duration: 60,
+        duration: 120,
         easing: 'linear',
       });
       const dir = (value === 0 && oldValue === 11) ? -1 : (value > oldValue ? -1 : 1);
@@ -147,23 +148,10 @@ export default {
         delay,
       });
     },
-
     updateMonth() {
       this.calendar = this.createMonth(this.year, this.month);
       this.setMonthName();
     },
-    // createYear(date) {
-    //   const year = {
-    //     year: date.getFullYear(), 
-    //     date,
-    //     months: [],
-    //   };
-
-    //   for (let y = 0; y < 12; y++) {
-    //     // const new Date
-    //     for
-    //   }
-    // },
     createMonth(year, month) {
       const dateArgs = [year, month];
       const monthStartsDay = new Date(...dateArgs).getDay();
@@ -340,11 +328,9 @@ export default {
   },
 
   mounted() {
-    this.$nextTick(() => {
-      const now = new Date();
-      this.month = now.getMonth();
-      this.year = now.getFullYear();
-    });
+    const now = new Date();
+    this.month = now.getMonth();
+    this.year = now.getFullYear();
     // this.calendar = this.createMonth(this.year, this.month)
     // this.$pane = this.$el.querySelector('.transform-pane');
     // anime.set(this.pane, {
@@ -441,13 +427,13 @@ export default {
   &__day
     flex-shrink: 0
     min-width: 20%
-    border-bottom: 1px dotted #e0e0e0
+    border-bottom: 1px dotted #f0f0f0
     // box-shadow: inset 2px 2px 0 1px rgba(#000, 0.068)
     transform-origin: 50% 50%
     box-sizing: border-box
     font-size: 13px
     min-height: 60px
-    color: #8d8d8d
+    color: #adadad
     border-radius: 1px
     position: relative
     will-change: transform

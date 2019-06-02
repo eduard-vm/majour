@@ -1,7 +1,7 @@
 <template>
   <div id="app">
-    <!-- <toolbar />
-    <drawer />  -->
+    <toolbar :options="toolbarOptions" :class="toolbarClass" />
+    <drawer /> 
     <div class="root-container">
       <transition :name="transitionName">
         <router-view class="child-view" />
@@ -23,16 +23,46 @@ export default {
 
   data() {
     return {
+      toolbarOptions: {
+        buttons: {
+          back: true,
+        },
+      },
+      toolbarClass: 'toolbar',
       transitionName: 'slide-left',
     };
   },
 
   watch: {
     '$route' (to, from) {
-      const toDepth = to.path.split('/').length
-      const fromDepth = from.path.split('/').length
-      this.transitionName = toDepth < fromDepth ? 'slide-right' : 'slide-left'
+      const toDepth = to.path.split('/').length;
+      const fromDepth = from.path.split('/').length;
+      this.transitionName = toDepth < fromDepth ? 'slide-right' : 'slide-left';
+      this.updateToolbarOptions();
     }
+  },
+
+  methods: {
+    updateToolbarOptions() {
+      const options = {
+        buttons: {
+          back: true,
+        },
+      };
+
+      if (this.$route.path === '/') {
+        options.buttons.back = false;
+        this.toolbarClass = 'toolbar--main';
+      } else {
+        this.toolbarClass = 'toolbar';
+      }
+
+      this.toolbarOptions = { ...this.toolbarOptions, ...options };
+    },
+  },
+
+  created() {
+    this.updateToolbarOptions();
   },
 };
 </script>
@@ -43,7 +73,11 @@ export default {
   position: absolute
   top: 56px
   // background-color: rgba(green, 0.1)
+  overflow: hidden
   width: 100%
+  .page
+    width: 100%
+    box-sizing: border-box
 
 .fade-enter-active, .fade-leave-active
   transition: opacity .5s ease

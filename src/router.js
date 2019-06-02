@@ -19,7 +19,7 @@ export default new Router({
       component: Home,
     },
     {
-      path: '/Calendar',
+      path: '/calendar',
       name: 'Calendar',
       component: Calendar,
     },
@@ -34,8 +34,8 @@ export default new Router({
           component: AddStudentForm,
         },
         {
-          path: '',
-          name: 'Students',
+          path: '/',
+          name: 'StudentsMain',
           // component: () => import('./views/Students/Index.vue'),
           component: StudentsIndex,
         },
