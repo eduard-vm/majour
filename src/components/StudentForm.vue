@@ -1,18 +1,24 @@
 <template>
-  <div>
-    <form @submit.prevent>
-      <input type="text" v-model="student.name" name="name" placeholder="Имя Фамилия" />
-    </form>
-  </div>
+  <form @submit.prevent class="form">
+    <div class="form__item">
+      <div class="form__item-label">
+      </div>
+      <div class="form__item-control"></div>
+    </div>
+  </form>
 </template>
 <script>
 export default {
+  name: 'student-form',
+
   data() {
     return {
-      student: {
+      form: {
         name: null,
       },
     };
   },
 };
 </script>
+
+style

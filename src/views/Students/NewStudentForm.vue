@@ -53,6 +53,7 @@ function declOfNum(c, v) {
 }
 // use:
 // declOfNum(count, ['найдена', 'найдено', 'найдены']);
+import { mapActions } from 'vuex';
 
 export default {
   name: 'new-student-form',
@@ -96,6 +97,10 @@ export default {
     },
   },
   methods: {
+    ...mapActions({
+      save: 'studets/save',
+    }),
+
     onSave() {
       console.log('on save user ');
       // this.$notify({

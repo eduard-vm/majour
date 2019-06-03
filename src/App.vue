@@ -1,5 +1,8 @@
 <template>
   <div id="app">
+    <!-- <div class="splashscreen">
+      <div class="splashscreen__container" ref="ssContainer" />
+    </div> -->
     <toolbar :options="toolbarOptions" :class="toolbarClass" />
     <drawer /> 
     <div class="root-container">
@@ -12,7 +15,7 @@
 <script>
 import Drawer from '@/components/Drawer';
 import Toolbar from '@/components/Toolbar';
-
+import anime from 'animejs';
 export default {
   name: 'app',
 
@@ -23,6 +26,7 @@ export default {
 
   data() {
     return {
+      loadingText: 'Загрузка',
       toolbarOptions: {
         buttons: {
           back: true,
@@ -43,6 +47,29 @@ export default {
   },
 
   methods: {
+    mainLoading() {
+      const timeline = new anime.timeline({
+        duration: 3000,
+      });
+
+      const container = this.$el.querySelector('.splashscreen__container');
+      this.loadingText.split('').map(s => {
+        const node = document.createElement('SPAN');
+        node.innerHTML = s;
+        node.style.willChange = 'transform, opacity';
+        node.style.display = 'inline-block';
+        node.style.opacity = '0';
+        container.appendChild(node);
+      });
+
+      timeline.add({
+        targets: container.querySelectorAll('span'),
+        opacity: [0, 1],
+        loop: 10,
+        delay: anime.stagger(100),
+      });
+    },
+
     updateToolbarOptions() {
       const options = {
         buttons: {
@@ -61,6 +88,10 @@ export default {
     },
   },
 
+  mounted() {
+    // this.mainLoading();
+  },
+
   created() {
     this.updateToolbarOptions();
   },
@@ -68,6 +99,24 @@ export default {
 </script>
 
 <style lang="sass">
+html,
+body,
+#app
+  font-family: 'Roboto'
+.splashscreen
+  position: absolute
+  top: 0
+  bottom: 0
+  left: 0
+  display: flex
+  justify-content: center
+  align-items: center
+  text-transform: uppercase
+  right: 0
+  background-color: #fff
+  width: 100%
+  height: 100%
+  z-index: 9999
 .root-container
   height: calc(100vh - 56px)
   position: absolute
